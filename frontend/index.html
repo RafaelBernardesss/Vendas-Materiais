@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SlideHub — Materiais digitais de PowerPoint e imagens</title>
+  <meta name="description" content="Templates de PowerPoint e packs de imagens prontos para usar. Pagamento via Pix e download imediato." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23E4572E'/%3E%3Cpath d='M18 42l10-20 10 20' stroke='white' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M23 34h10' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/css/styles.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="page">
+    <!-- Hero -->
+    <section class="hero" id="hero" hidden>
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow">Materiais digitais · PowerPoint &amp; imagens</p>
+          <h1>Apresente melhor.<br /><span class="accent">Baixe na hora.</span></h1>
+          <p class="hero-sub">
+            Templates de PowerPoint e packs de imagens com acabamento profissional.
+            Pague com Pix, receba na hora e baixe quantas vezes quiser.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary btn-lg" href="#vitrine">Explorar materiais</a>
+            <a class="btn btn-outline btn-lg" href="/cadastro">Criar conta grátis</a>
+          </div>
+          <ul class="hero-points" aria-label="Vantagens">
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg> Pix com confirmação automática</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg> Download imediato e vitalício</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l7 4v6c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/></svg> Acesso protegido pela sua conta</li>
+          </ul>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="slide-card slide-card-3"><div class="slide-bar"></div><div class="slide-line w60"></div><div class="slide-line w40"></div></div>
+          <div class="slide-card slide-card-2"><div class="slide-bar wide"></div><div class="slide-line w70"></div><div class="slide-line w50"></div></div>
+          <div class="slide-card slide-card-1">
+            <div class="slide-chip">PPTX</div>
+            <div class="slide-bar"></div>
+            <div class="slide-line w80"></div>
+            <div class="slide-line w60"></div>
+            <div class="slide-line w70"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vitrine -->
+    <section class="vitrine" id="vitrine">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Vitrine</h2>
+            <p class="section-sub">Escolha um material, pague com Pix e faça o download em segundos.</p>
+          </div>
+        </div>
+        <div id="vitrine-grid" class="grid" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <noscript>
+      <p class="noscript-msg">Este site precisa de JavaScript habilitado para navegar, comprar e baixar materiais.</p>
+    </noscript>
+  </main>
+  <div id="site-footer"></div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <script type="module" src="/src/js/main.js"></script>
+</body>
+</html>

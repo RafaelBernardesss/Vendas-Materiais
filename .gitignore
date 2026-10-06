@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.next/
+*.log
+tsconfig.tsbuildinfo
+.env
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+backend/uploads/arquivos/
+backend/uploads/demo/
+!backend/uploads/.gitkeep

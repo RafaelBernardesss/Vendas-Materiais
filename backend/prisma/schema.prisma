@@ -1,0 +1,142 @@
+// Prisma + SQLite
+// Obs.: o SQLite não suporta enums nativos — role/status são Strings
+// validadas na aplicação (USER/ADMIN e PENDING/PAID/CANCELED).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int        @id @default(autoincrement())
+  nome            String
+  email           String     @unique
+  senha           String
+  dataNascimento  DateTime
+  role            String     @default("USER") // USER | ADMIN
+  createdAt       DateTime   @default(now())
+  carrinho        CartItem[]
+  pedidos         Order[]
+  avaliacoes      Avaliacao[]
+  comentarios     Comentario[]
+}
+
+model Material {
+  id           Int            @id @default(autoincrement())
+  titulo       String
+  descricao    String?
+  preco        Float
+  arquivoCapa  String? // caminho relativo a UPLOAD_DIR
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  arquivos     MaterialFile[]
+  fotos        MaterialFoto[]
+  carrinho     CartItem[]
+  pedidos      OrderItem[]
+  avaliacoes   Avaliacao[]
+  comentarios  Comentario[]
+
+  @@index([createdAt])
+}
+
+model MaterialFile {
+  id              Int      @id @default(autoincrement())
+  materialId      Int
+  material        Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  nomeArquivo     String // nome original exibido para o cliente
+  caminhoRelativo String   @unique // caminho relativo a UPLOAD_DIR
+  tipo            String // PPTX | IMAGEM
+  tamanho         Int // bytes
+  mime            String?
+  createdAt       DateTime @default(now())
+
+  @@index([materialId])
+}
+
+model CartItem {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  materialId Int
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, materialId])
+  @@index([userId])
+}
+
+model Order {
+  id               Int         @id @default(autoincrement())
+  userId           Int
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status           String      @default("PENDING") // PENDING | PAID | CANCELED
+  total            Float
+  txid             String? // txid do Pix
+  providerPaymentId String? // id do pagamento no provedor (Mercado Pago / mock)
+  nomeCompleto     String? // nome informado no checkout
+  cpf              String? // CPF (somente dígitos) informado no checkout
+  createdAt        DateTime    @default(now())
+  paidAt           DateTime?
+  itens            OrderItem[]
+
+  @@index([status])
+  @@index([userId])
+}
+
+model OrderItem {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  materialId Int
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Restrict)
+  preco      Float // preço no momento da compra
+  status     String   @default("PENDING") // PENDING | PAID | CANCELED
+
+  @@unique([orderId, materialId])
+  @@index([materialId])
+  @@index([status])
+}
+
+// Fotos de divulgação do anúncio (públicas). A primeira vira a capa.
+model MaterialFoto {
+  id              Int      @id @default(autoincrement())
+  materialId      Int
+  material        Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  caminhoRelativo String   @unique // caminho relativo a UPLOAD_DIR
+  ordem           Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  @@index([materialId])
+}
+
+// Nota de 1 a 5 — apenas quem comprou avalia (uma nota por usuário/material).
+model Avaliacao {
+  id         Int      @id @default(autoincrement())
+  materialId Int
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nota       Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, materialId])
+  @@index([materialId])
+}
+
+// Comentários / feedback na página do produto.
+model Comentario {
+  id         Int      @id @default(autoincrement())
+  materialId Int
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  texto      String
+  createdAt  DateTime @default(now())
+
+  @@index([materialId, createdAt])
+}

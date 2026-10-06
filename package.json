@@ -1,0 +1,27 @@
+{
+  "name": "slidehub-store",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SlideHub — Loja de materiais digitais (PowerPoint e imagens) com pagamento via Pix. Express + Prisma + SQLite + Vite.",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace backend && npm run build --workspace frontend",
+    "build:backend": "npm run build --workspace backend",
+    "build:frontend": "npm run build --workspace frontend",
+    "start": "npm run start --workspace backend",
+    "dev": "concurrently -n api,web -c yellow,cyan \"npm run dev --workspace backend\" \"npm run dev --workspace frontend\"",
+    "db:migrate": "npm run db:migrate --workspace backend",
+    "db:seed": "npm run db:seed --workspace backend",
+    "demo:files": "npm run demo:files --workspace backend"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}

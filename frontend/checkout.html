@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout Pix · SlideHub</title>
+  <meta name="description" content="Pague com Pix: QR Code e copia-e-cola, confirmação automática." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23E4572E'/%3E%3Cpath d='M18 42l10-20 10 20' stroke='white' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M23 34h10' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/css/styles.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="page page-narrow">
+    <div class="section-head">
+      <h1 class="page-title">Checkout</h1>
+      <p class="section-sub">Pagamento via Pix — a confirmação é automática, sem burocracia.</p>
+    </div>
+
+    <div id="checkout-carregando" class="skeleton-list">
+      <div class="skel skel-row"></div><div class="skel skel-row tall"></div>
+    </div>
+
+    <!-- Etapa 1: dados + resumo -->
+    <section id="checkout-passo-dados" class="checkout-grid" hidden>
+      <form id="form-checkout" class="panel" novalidate>
+        <h2>Dados do comprador</h2>
+        <p class="muted small">Esses dados acompanham o pedido para emissão de comprovante.</p>
+        <div class="field">
+          <label for="nome-completo">Nome completo</label>
+          <input id="nome-completo" name="nomeCompleto" type="text" autocomplete="name" placeholder="Como no seu documento" required />
+        </div>
+        <div class="field">
+          <label for="cpf">CPF</label>
+          <input id="cpf" name="cpf" type="text" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" required />
+          <small class="field-hint">Usado apenas para validar a compra. Nunca é exibido para outros usuários.</small>
+        </div>
+        <p id="form-erro" class="form-error" role="alert" hidden></p>
+        <button type="submit" class="btn btn-pix btn-block btn-lg">
+          <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 2l4 4-4 4-4-4zM2 12l4-4 4 4-4 4zM12 14l4-4 4 4-4 4zM14 12l4-4 4 4-4 4z"/></svg>
+          <span class="btn-text">Gerar cobrança Pix</span>
+        </button>
+      </form>
+
+      <aside class="panel panel-resumo">
+        <h2>Resumo do pedido</h2>
+        <ul id="resumo-itens" class="resumo-list"></ul>
+        <div class="resumo-total">
+          <span>Total</span>
+          <strong id="resumo-valor">—</strong>
+        </div>
+        <ul class="resumo-notas">
+          <li>Confirmação automática em segundos</li>
+          <li>Acesso vitalício aos arquivos</li>
+        </ul>
+      </aside>
+    </section>
+
+    <!-- Etapa 2: QR Code -->
+    <section id="checkout-passo-qr" class="qr-panel" hidden>
+      <div class="qr-card">
+        <p class="qr-titulo">Escaneie o QR Code com o app do seu banco</p>
+        <div class="qr-frame"><canvas id="qr-canvas" width="220" height="220" aria-label="QR Code do Pix"></canvas></div>
+        <div class="status-pill" id="status-pill" role="status">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="status-texto">Aguardando pagamento…</span>
+        </div>
+        <p class="muted small" id="qr-validade">O código expira em 30 minutos.</p>
+
+        <h3 class="qr-copy-title">Prefere pagar pelo copia-e-cola?</h3>
+        <div class="copiar-linha">
+          <textarea id="qr-copiar" rows="3" readonly aria-label="Código Pix copia e cola"></textarea>
+          <button type="button" class="btn btn-outline" id="btn-copiar">Copiar</button>
+        </div>
+
+        <div id="modo-mock" class="mock-box" hidden>
+          <p><strong>Modo simulação ativo</strong> (PAYMENT_MODE=mock). Para testar o fluxo completo sem pagar, aprove a cobrança abaixo.</p>
+          <button type="button" class="btn btn-primary" id="btn-simular">Simular pagamento aprovado</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Etapa 3: sucesso -->
+    <section id="checkout-passo-sucesso" class="qr-panel" hidden>
+      <div class="qr-card sucesso">
+        <div class="sucesso-check" aria-hidden="true">
+          <svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24" fill="none"/><path fill="none" d="M14 27l8 8 16-16"/></svg>
+        </div>
+        <h2>Pagamento confirmado!</h2>
+        <p class="muted">Seus materiais já estão liberados. Faça o download quantas vezes quiser em “Meus materiais”.</p>
+        <div class="sucesso-actions">
+          <a class="btn btn-pix btn-lg" href="/meus-materiais">Baixar meus materiais</a>
+          <a class="btn btn-outline btn-lg" href="/">Voltar à vitrine</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div id="site-footer"></div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <script type="module" src="/src/js/checkout.js"></script>
+</body>
+</html>
