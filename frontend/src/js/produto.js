@@ -72,10 +72,14 @@ function avaliarBoxHtml() {
   if (!m.comprado) {
     return '<p class="aviso-compra">🔒 Somente quem comprou pode avaliar. Assim todas as notas são de clientes reais.</p>';
   }
+  // Já avaliou: a nota é definitiva, então mostra só as estrelas (sem botões).
+  if (m.minhaNota) {
+    return `<div class="avaliar-box"><p>Sua avaliação:</p><div>${stars(m.minhaNota)}</div><p class="muted small" style="margin:6px 0 0">Você já avaliou este material. Cada usuário avalia uma única vez.</p></div>`;
+  }
   const botoes = [1, 2, 3, 4, 5]
-    .map((n) => `<button type="button" data-nota="${n}" aria-label="${n} estrela${n > 1 ? 's' : ''}"><svg viewBox="0 0 24 24" class="star ${n <= m.minhaNota ? 'on' : ''}"><path d="${STAR_SVG_PATH}"/></svg></button>`)
+    .map((n) => `<button type="button" data-nota="${n}" aria-label="${n} estrela${n > 1 ? 's' : ''}"><svg viewBox="0 0 24 24" class="star"><path d="${STAR_SVG_PATH}"/></svg></button>`)
     .join('');
-  return `<div class="avaliar-box"><p>${m.minhaNota ? 'Sua avaliação (clique para alterar):' : 'Avalie este material:'}</p><div class="estrelas-input" id="estrelas-input">${botoes}</div></div>`;
+  return `<div class="avaliar-box"><p>Avalie este material (só é possível uma vez):</p><div class="estrelas-input" id="estrelas-input">${botoes}</div></div>`;
 }
 
 function atualizarAvaliacoes() {
@@ -108,21 +112,37 @@ function comentarioHtml(c) {
   </article>`;
 }
 
+let jaComentei = false; // o usuário logado já tem um comentário neste material
+let formRenderizadoComo = null; // evita redesenhar o formulário (e apagar o texto digitado) sem necessidade
+
 async function carregarComentarios() {
   const lista = document.getElementById('comentario-lista');
   try {
-    const { comentarios } = await api.get(`/api/materiais/${id}/comentarios`);
+    const dados = await api.get(`/api/materiais/${id}/comentarios`);
+    const { comentarios } = dados;
+    jaComentei = !!dados.jaComentei;
     lista.innerHTML = comentarios.length
       ? comentarios.map(comentarioHtml).join('')
       : '<p class="muted">Ainda não há comentários. Seja o primeiro a deixar um feedback!</p>';
   } catch (err) {
     lista.innerHTML = `<p class="muted">${escapeHtml(err.message)}</p>`;
   }
+  atualizarFormComentario();
+}
+
+function atualizarFormComentario() {
+  const box = document.getElementById('comentario-form-box');
+  if (!box || formRenderizadoComo === jaComentei) return;
+  box.innerHTML = comentarioFormHtml();
+  formRenderizadoComo = jaComentei;
 }
 
 function comentarioFormHtml() {
   if (!state.user) {
     return `<p class="muted"><a href="/login?next=${encodeURIComponent(location.pathname + location.search)}">Entre na sua conta</a> para comentar.</p>`;
+  }
+  if (jaComentei) {
+    return '<p class="aviso-compra">Você já comentou neste material. Para escrever outro comentário, exclua o seu.</p>';
   }
   return `
   <form class="comentario-form" id="comentario-form" novalidate>
@@ -166,11 +186,12 @@ function render() {
     <aside class="aval-resumo" id="aval-resumo">${resumoHtml()}${avaliarBoxHtml()}</aside>
     <div class="comentarios">
       <h2>Comentários</h2>
-      ${comentarioFormHtml()}
+      <div id="comentario-form-box"></div>
       <div class="comentario-lista" id="comentario-lista"><p class="muted">Carregando…</p></div>
     </div>
   </section>`;
-  carregarComentarios();
+  formRenderizadoComo = null;
+  carregarComentarios(); // também desenha o formulário (ou o aviso de "já comentou")
 }
 
 async function carregar() {
@@ -243,6 +264,13 @@ root.addEventListener('click', async (e) => {
       toast('Obrigado pela avaliação!', 'success');
     } catch (err) {
       toast(err.message, 'error');
+      if (err.status === 409) {
+        // Já havia avaliado (outra aba/dispositivo): sincroniza e trava as estrelas.
+        try {
+          ({ material: m } = await api.get(`/api/materiais/${id}`));
+          atualizarAvaliacoes();
+        } catch { /* mantém a tela como está */ }
+      }
     }
     return;
   }
@@ -282,6 +310,7 @@ root.addEventListener('submit', async (e) => {
     carregarComentarios();
   } catch (err) {
     toast(err.message, 'error');
+    if (err.status === 409) carregarComentarios(); // já tinha comentado: troca o formulário pelo aviso
   } finally {
     btn.disabled = false;
   }

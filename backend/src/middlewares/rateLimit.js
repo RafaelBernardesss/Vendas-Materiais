@@ -9,21 +9,19 @@ const base = {
   },
 };
 
-/** Limite de tentativas de login por IP (15 min / 20). */
 const loginLimiter = rateLimit({
   ...base,
   windowMs: 15 * 60 * 1000,
   limit: 20,
 });
 
-/** Limite de cadastros por IP (15 min / 5). */
 const cadastroLimiter = rateLimit({
   ...base,
   windowMs: 15 * 60 * 1000,
   limit: 5,
 });
 
-/** Limite de comentários por IP (10 min / 15). */
+
 const comentarioLimiter = rateLimit({
   ...base,
   windowMs: 10 * 60 * 1000,

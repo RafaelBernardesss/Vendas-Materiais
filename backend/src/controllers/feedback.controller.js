@@ -37,7 +37,16 @@ async function listarComentarios(req, res, next) {
     const compradores = new Set(compras.map((c) => c.order.userId));
     const notaDe = new Map(notas.map((n) => [n.userId, n.nota]));
 
+    // Consulta própria (a lista acima é limitada a 100 e pode não incluir o comentário do usuário).
+    const jaComentei = req.user
+      ? !!(await prisma.comentario.findUnique({
+          where: { userId_materialId: { userId: req.user.id, materialId } },
+          select: { id: true },
+        }))
+      : false;
+
     res.json({
+      jaComentei,
       comentarios: comentarios.map((c) => ({
         id: c.id,
         texto: c.texto,
@@ -55,7 +64,10 @@ async function listarComentarios(req, res, next) {
   }
 }
 
-/** POST /api/materiais/:id/comentarios { texto } — qualquer usuário logado. */
+const MSG_JA_COMENTOU = 'Você já comentou neste material. Exclua o seu comentário para escrever outro.';
+const MSG_JA_AVALIOU = 'Você já avaliou este material. Cada usuário pode avaliar apenas uma vez.';
+
+/** POST /api/materiais/:id/comentarios { texto } — um comentário por usuário/material. */
 async function criarComentario(req, res, next) {
   try {
     const materialId = Number(req.params.id);
@@ -64,7 +76,21 @@ async function criarComentario(req, res, next) {
     if (texto.length < 3) throw ApiError.badRequest('Escreva pelo menos 3 caracteres.');
     if (texto.length > 1000) throw ApiError.badRequest('O comentário pode ter no máximo 1000 caracteres.');
 
-    const c = await prisma.comentario.create({ data: { materialId, userId: req.user.id, texto } });
+    const userId = req.user.id;
+    const existente = await prisma.comentario.findUnique({
+      where: { userId_materialId: { userId, materialId } },
+      select: { id: true },
+    });
+    if (existente) throw ApiError.conflict(MSG_JA_COMENTOU);
+
+    let c;
+    try {
+      c = await prisma.comentario.create({ data: { materialId, userId, texto } });
+    } catch (err) {
+      // Duplo clique / requisições simultâneas: o índice único do banco barra o segundo.
+      if (err && err.code === 'P2002') throw ApiError.conflict(MSG_JA_COMENTOU);
+      throw err;
+    }
     res.status(201).json({ id: c.id, mensagem: 'Comentário publicado!' });
   } catch (err) {
     next(err);
@@ -86,7 +112,7 @@ async function excluirComentario(req, res, next) {
   }
 }
 
-/** PUT /api/materiais/:id/avaliacao { nota: 1..5 } — somente quem comprou. */
+/** PUT /api/materiais/:id/avaliacao { nota: 1..5 } — somente quem comprou, uma única vez. */
 async function avaliar(req, res, next) {
   try {
     const materialId = Number(req.params.id);
@@ -94,15 +120,24 @@ async function avaliar(req, res, next) {
     const nota = Number(req.body.nota);
     if (!Number.isInteger(nota) || nota < 1 || nota > 5) throw ApiError.badRequest('A nota deve ser de 1 a 5.');
 
-    if (!(await usuarioComprou(req.user.id, materialId))) {
+    const userId = req.user.id;
+    if (!(await usuarioComprou(userId, materialId))) {
       throw ApiError.forbidden('Somente quem comprou este material pode avaliá-lo.');
     }
 
-    await prisma.avaliacao.upsert({
-      where: { userId_materialId: { userId: req.user.id, materialId } },
-      update: { nota },
-      create: { userId: req.user.id, materialId, nota },
+    const existente = await prisma.avaliacao.findUnique({
+      where: { userId_materialId: { userId, materialId } },
+      select: { id: true },
     });
+    if (existente) throw ApiError.conflict(MSG_JA_AVALIOU);
+
+    try {
+      await prisma.avaliacao.create({ data: { userId, materialId, nota } });
+    } catch (err) {
+      // Requisições simultâneas: o índice único (userId, materialId) barra a segunda.
+      if (err && err.code === 'P2002') throw ApiError.conflict(MSG_JA_AVALIOU);
+      throw err;
+    }
     res.json({ ok: true, minhaNota: nota, avaliacoes: await resumoNotas(materialId) });
   } catch (err) {
     next(err);

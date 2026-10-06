@@ -113,7 +113,8 @@ model MaterialFoto {
   @@index([materialId])
 }
 
-// Nota de 1 a 5 — apenas quem comprou avalia (uma nota por usuário/material).
+// Nota de 1 a 5 — apenas quem comprou avalia. Uma única nota por usuário/material,
+// definitiva (não pode ser alterada nem repetida).
 model Avaliacao {
   id         Int      @id @default(autoincrement())
   materialId Int
@@ -128,7 +129,8 @@ model Avaliacao {
   @@index([materialId])
 }
 
-// Comentários / feedback na página do produto.
+// Comentário / feedback na página do produto — um por usuário/material
+// (excluir o comentário libera para escrever outro).
 model Comentario {
   id         Int      @id @default(autoincrement())
   materialId Int
@@ -138,5 +140,6 @@ model Comentario {
   texto      String
   createdAt  DateTime @default(now())
 
+  @@unique([userId, materialId])
   @@index([materialId, createdAt])
 }
