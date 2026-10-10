@@ -65,13 +65,16 @@ async function main() {
   const adminEmail = (process.env.ADMIN_EMAIL || 'admin@slidehub.com').toLowerCase();
   const adminSenha = process.env.ADMIN_PASSWORD || 'Admin@1234';
 
+  // A senha do .env vale sempre: se o admin ja existia (criado antes com outra senha),
+  // ela e atualizada aqui. Assim, mudar ADMIN_PASSWORD e reiniciar resolve o login.
+  const senhaHash = await bcrypt.hash(adminSenha, 10);
   await prisma.user.upsert({
     where: { email: adminEmail },
-    update: { role: 'ADMIN' },
+    update: { role: 'ADMIN', senha: senhaHash },
     create: {
       nome: 'Administrador',
       email: adminEmail,
-      senha: await bcrypt.hash(adminSenha, 10),
+      senha: senhaHash,
       dataNascimento: new Date('1990-01-01T00:00:00Z'),
       role: 'ADMIN',
     },

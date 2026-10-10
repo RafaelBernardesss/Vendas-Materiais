@@ -36,7 +36,9 @@ app.disable('x-powered-by');
 
 // Atrás de proxy/HTTPS (Render, Railway, Nginx...) o Express precisa confiar no proxy,
 // senão cookies "secure" não são enviados e o IP/protocolo chegam errados.
-if (env.COOKIE_SECURE === true || env.COOKIE_SECURE === 'true') {
+// Também vale para túneis (Cloudflare/ngrok): PUBLIC_URL https => há um proxy na frente
+// enviando X-Forwarded-For (sem isso o express-rate-limit dá ERR_ERL_UNEXPECTED_X_FORWARDED_FOR).
+if (env.COOKIE_SECURE === true || env.COOKIE_SECURE === 'true' || /^https:\/\//i.test(env.PUBLIC_URL || '')) {
   app.set('trust proxy', 1);
 }
 

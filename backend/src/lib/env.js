@@ -1,5 +1,6 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
+// override: true -> o .env vale mais que variaveis antigas definidas no Windows/terminal
+require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env'), override: true });
 
 /**
  * O app usa SEMPRE SQLite. Aceita DATABASE_URL externa apenas quando
@@ -31,8 +32,8 @@ const env = {
   PAYMENT_MODE: (process.env.PAYMENT_MODE || 'mock').toLowerCase(),
   MP_ACCESS_TOKEN: limparSegredo(process.env.MP_ACCESS_TOKEN).replace(/^Bearer\s+/i, ''),
   MP_WEBHOOK_SECRET: limparSegredo(process.env.MP_WEBHOOK_SECRET),
-  PUBLIC_URL: process.env.PUBLIC_URL || 'http://localhost:3000',
-  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
+  PUBLIC_URL: limparSegredo(process.env.PUBLIC_URL || 'http://localhost:3000').replace(/\/+$/, ''),
+  FRONTEND_URL: limparSegredo(process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, ''),
   UPLOAD_DIR: process.env.UPLOAD_DIR
     ? path.resolve(process.env.UPLOAD_DIR)
     : path.join(__dirname, '..', '..', 'uploads'),
