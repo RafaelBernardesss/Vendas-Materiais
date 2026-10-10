@@ -81,6 +81,7 @@ async function criar(req, res, next) {
       valor: total,
       email: req.user.email,
       nome: nomeCompleto,
+      cpf: cpfSvc.soDigitos(cpf),
     });
 
     await prisma.order.update({
@@ -114,7 +115,7 @@ async function status(req, res, next) {
 
     if (order.status === 'PENDING') {
       const remoto = await pix.statusNoProvedor(order.providerPaymentId);
-      if (remoto && remoto.status === 'approved') {
+      if (pix.pagamentoConfere(order, remoto)) {
         await confirmarPagamento(order.id, remoto.txid);
       }
     }
@@ -161,19 +162,22 @@ async function webhook(req, res) {
       }
     }
 
-    const data = (req.body && req.body.data) || {};
-    const providerId = data.id || (req.body && req.body.resource);
+    // Só interessam notificações de pagamento (o MP também avisa outros tópicos).
+    const tipo = (req.body && (req.body.type || req.body.topic)) || req.query.type || 'payment';
+    if (tipo !== 'payment') return res.json({ ok: true, ignorado: true });
+
+    const providerId = pix.idDaNotificacao(req);
     if (!providerId) return res.json({ ok: true, ignorado: true });
 
     const order = await prisma.order.findFirst({
-      where: { providerPaymentId: String(providerId) },
+      where: { providerPaymentId: providerId },
     });
     if (!order) return res.json({ ok: true, ignorado: true });
     if (order.status === 'PAID') return res.json({ ok: true, idempotente: true });
 
     // Nunca confie no corpo do webhook: confirme consultando o provedor.
-    const remoto = await pix.statusNoProvedor(String(providerId));
-    if (remoto && remoto.status === 'approved') {
+    const remoto = await pix.statusNoProvedor(providerId);
+    if (pix.pagamentoConfere(order, remoto)) {
       await confirmarPagamento(order.id, remoto.txid);
       return res.json({ ok: true, confirmado: true });
     }

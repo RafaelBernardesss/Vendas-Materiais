@@ -13,7 +13,10 @@ const npm = isWin ? 'npm.cmd' : 'npm';
 
 function rodar(titulo, cmd, args, cwd) {
   console.log(`[iniciar] ${titulo}...`);
-  const r = spawnSync(cmd, args, { cwd, stdio: 'inherit', shell: isWin, env: process.env });
+  // No Windows o shell quebra caminhos com espaço (ex.: C:\Program Files\nodejs\node.exe),
+  // então o executável precisa ir entre aspas.
+  const comando = isWin && /\s/.test(cmd) ? `"${cmd}"` : cmd;
+  const r = spawnSync(comando, args, { cwd, stdio: 'inherit', shell: isWin, env: process.env });
   if (r.status !== 0) console.warn(`[iniciar] AVISO: "${titulo}" terminou com erro (código ${r.status}).`);
   return r.status === 0;
 }

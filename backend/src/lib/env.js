@@ -16,6 +16,11 @@ function resolverDatabaseUrl() {
 // process.env.DATABASE_URL diretamente).
 process.env.DATABASE_URL = resolverDatabaseUrl();
 
+/** Remove espaços, quebras de linha e aspas que costumam sobrar ao colar credenciais. */
+function limparSegredo(v) {
+  return String(v || '').trim().replace(/^["']|["']$/g, '').trim();
+}
+
 const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   PORT: parseInt(process.env.PORT || '3000', 10),
@@ -24,8 +29,8 @@ const env = {
   ADMIN_EMAIL: (process.env.ADMIN_EMAIL || 'admin@slidehub.com').toLowerCase(),
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'Admin@1234',
   PAYMENT_MODE: (process.env.PAYMENT_MODE || 'mock').toLowerCase(),
-  MP_ACCESS_TOKEN: process.env.MP_ACCESS_TOKEN || '',
-  MP_WEBHOOK_SECRET: process.env.MP_WEBHOOK_SECRET || '',
+  MP_ACCESS_TOKEN: limparSegredo(process.env.MP_ACCESS_TOKEN).replace(/^Bearer\s+/i, ''),
+  MP_WEBHOOK_SECRET: limparSegredo(process.env.MP_WEBHOOK_SECRET),
   PUBLIC_URL: process.env.PUBLIC_URL || 'http://localhost:3000',
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
   UPLOAD_DIR: process.env.UPLOAD_DIR
